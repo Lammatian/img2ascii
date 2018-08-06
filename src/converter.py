@@ -9,6 +9,43 @@ def convert_to_binary(imagepath):
     arr[arr > 128] = 1
     return arr
 
+def split_image(binary_image, chunks_width, chunks_height):
+    w_step = binary_image.shape[1]//chunks_width
+    h_step = binary_image.shape[0]//chunks_height
+    print(w_step, h_step)
+
+    current_width = 0
+    count_wider = 0
+    add_width = 0
+
+    while current_width < binary_image.shape[1]:
+        current_height = 0
+        count_higher = 0
+        add_height = 0
+
+        if count_wider < binary_image.shape[1]%chunks_width:
+            add_width = 1
+            count_wider += 1
+        elif count_wider == binary_image.shape[1]%chunks_width:
+            add_width = 0
+
+        while current_height < binary_image.shape[0] - 1:
+            if count_higher < binary_image.shape[0]%chunks_height:
+                add_height = 1
+                count_higher += 1
+            elif count_higher == binary_image.shape[0]%chunks_height:
+                add_height = 0
+            
+            print((current_height, current_height + h_step + add_height))
+            print((current_width, current_width + w_step + add_width))
+            print(binary_image[current_height:(current_height + h_step + add_height),
+                               current_width:(current_width + w_step + add_width)])
+            
+            current_height += h_step + add_height
+        
+        current_width += w_step + add_width
+
+
 """
 Similarity treating pictures as vectors and calculating the angle between them
 """
@@ -58,3 +95,7 @@ def find_best_match(imagepath):
     show_binary_image(best_match_cos)
     show_binary_image(best_match_binary)
     return best_match_cos
+
+if __name__ == "__main__":
+    print(convert_to_binary("../img/100.png"))
+    split_image(convert_to_binary("../img/100.png"), 3, 3)

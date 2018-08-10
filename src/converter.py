@@ -76,48 +76,52 @@ Similarity based on how many white (value 1) squares match
 def white_similarity(a, b):
     return np.sum((a*b).ravel())
 
+similarity_measures = {
+    "binary": binary_similarity,
+    "cos": cos_similarity,
+    "white": white_similarity
+}
+
 def show_binary_image(a):
     Image.frombytes(mode='1', size=a.shape[::-1], data=np.packbits(a, axis=1)).show()
 
 def resize_binary_image(bin_img):
     return Image.frombytes(mode='1', size=a.shape[::-1], data=np.packbits(a, axis=1)).resize((20, 39))
 
-def find_best_match(image):
+def find_best_match(image, measure="cos"):
     binary_image = convert_to_binary(image)
 
-    best_match_cos = None
-    best_similarity_cos = 0
-    best_cos_char = " "
+    best_value = 0
+    best_char = " "
 
     for i in range(32, 127):
         asc_img = Image.open("../img/" + str(i) + ".png")
         asc = convert_to_binary(asc_img)
-        similarity_c = cos_similarity(asc, binary_image)
+        similarity = similarity_measures[measure](asc, binary_image)
 
-        if similarity_c > best_similarity_cos:
-            best_cos_char = chr(i)
-            best_match_cos = asc
-            best_similarity_cos = similarity_c
+        if similarity > best_value:
+            best_char = chr(i)
+            best_value = similarity
         
-        #print("{}: cosine similarity {}".format(i, similarity_c))
+        #print("{}: {} similarity {}".format(i, measure, similarity_c))
 
     #print("Best char: {}".format(best_cos_char))
     
-    return best_cos_char
+    return best_char
 
-def create_ascii_art(image, width, height):
+def create_ascii_art(image, width, height, measure="cos"):
     result = ""
     widthcount = 0
     for part in split_image(image, width, height):
-        result += find_best_match(part)
+        result += find_best_match(part, measure)
         widthcount = (widthcount + 1) % width
 
         if widthcount == 0:
             result += "\n"
 
-    return result
+    print(result)
 
+# TODO: For testing
 if __name__ == "__main__":
     img = Image.open("/home/mateusz/Pictures/Wallpapers/serpentines.jpg")
-
-    print(create_ascii_art(img, 40, 40))
+    create_ascii_art(img, 40, 20)

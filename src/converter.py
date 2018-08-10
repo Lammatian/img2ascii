@@ -2,48 +2,57 @@ from PIL import Image
 import numpy as np
 from scipy import spatial
 
-def convert_to_binary(imagepath):
-    img = Image.open(imagepath).resize((20, 39))
-    arr = np.array(img.convert('L'))
+"""
+Convert an image to binary format and appropriate size for comparison
+"""
+def convert_to_binary(image):
+    image = image.resize((20, 39))
+    arr = np.array(image.convert('L'))
     arr[arr < 128] = 0
     arr[arr > 128] = 1
     return arr
 
-def split_image(binary_image, chunks_width, chunks_height):
-    w_step = binary_image.shape[1]//chunks_width
-    h_step = binary_image.shape[0]//chunks_height
-    print(w_step, h_step)
+"""
+Given cw and ch, split an image into cw parts width-wise and ch parts height-wise
+"""
+def split_image(image, chunks_width, chunks_height):
+    image_width = image.size[0]
+    image_height = image.size[1]
+    w_step = image_width//chunks_width
+    h_step = image_height//chunks_height
 
-    current_width = 0
-    count_wider = 0
-    add_width = 0
+    current_height = 0
+    count_higher = 0
+    add_height = 0
 
-    while current_width < binary_image.shape[1]:
-        current_height = 0
-        count_higher = 0
-        add_height = 0
+    while current_height < image_height:
+        current_width = 0
+        count_wider = 0
+        add_width = 0
 
-        if count_wider < binary_image.shape[1]%chunks_width:
-            add_width = 1
-            count_wider += 1
-        elif count_wider == binary_image.shape[1]%chunks_width:
-            add_width = 0
+        if count_higher < image_height%chunks_height:
+            add_height = 1
+            count_higher += 1
+        elif count_higher == image_height%chunks_height:
+            add_height = 0
 
-        while current_height < binary_image.shape[0] - 1:
-            if count_higher < binary_image.shape[0]%chunks_height:
-                add_height = 1
-                count_higher += 1
-            elif count_higher == binary_image.shape[0]%chunks_height:
-                add_height = 0
+        while current_width < image_width - 1:
+            if count_wider < image_width%chunks_width:
+                add_width = 1
+                count_wider += 1
+            elif count_wider == image_width%chunks_width:
+                add_width = 0
             
-            print((current_height, current_height + h_step + add_height))
-            print((current_width, current_width + w_step + add_width))
-            print(binary_image[current_height:(current_height + h_step + add_height),
-                               current_width:(current_width + w_step + add_width)])
+            #image.crop((current_width, current_height,
+            #            current_width + w_step + add_width,
+            #            current_height + h_step + add_height)).show()
+            yield image.crop((current_width, current_height,
+                              current_width + w_step + add_width,
+                              current_height + h_step + add_height))
             
-            current_height += h_step + add_height
+            current_width += w_step + add_width
         
-        current_width += w_step + add_width
+        current_height += h_step + add_height
 
 
 """
@@ -70,32 +79,45 @@ def white_similarity(a, b):
 def show_binary_image(a):
     Image.frombytes(mode='1', size=a.shape[::-1], data=np.packbits(a, axis=1)).show()
 
-def find_best_match(imagepath):
-    binary_image = convert_to_binary(imagepath)
+def resize_binary_image(bin_img):
+    return Image.frombytes(mode='1', size=a.shape[::-1], data=np.packbits(a, axis=1)).resize((20, 39))
 
-    best_match_binary = None
-    best_similarity_binary = 0
+def find_best_match(image):
+    binary_image = convert_to_binary(image)
+
     best_match_cos = None
     best_similarity_cos = 0
+    best_cos_char = " "
 
     for i in range(32, 127):
-        asc = convert_to_binary("img/" + str(i) + ".png")
+        asc_img = Image.open("../img/" + str(i) + ".png")
+        asc = convert_to_binary(asc_img)
         similarity_c = cos_similarity(asc, binary_image)
-        similarity_b = binary_similarity(asc, binary_image)
 
         if similarity_c > best_similarity_cos:
+            best_cos_char = chr(i)
             best_match_cos = asc
             best_similarity_cos = similarity_c
-        if similarity_b > best_similarity_binary:
-            best_match_binary = asc 
-            best_similarity_binary = similarity_b
         
-        print("{}: cosine similarity {} | binary similarity {}".format(i, similarity_c, similarity_b))
+        #print("{}: cosine similarity {}".format(i, similarity_c))
+
+    #print("Best char: {}".format(best_cos_char))
     
-    show_binary_image(best_match_cos)
-    show_binary_image(best_match_binary)
-    return best_match_cos
+    return best_cos_char
+
+def create_ascii_art(image, width, height):
+    result = ""
+    widthcount = 0
+    for part in split_image(image, width, height):
+        result += find_best_match(part)
+        widthcount = (widthcount + 1) % width
+
+        if widthcount == 0:
+            result += "\n"
+
+    return result
 
 if __name__ == "__main__":
-    print(convert_to_binary("../img/100.png"))
-    split_image(convert_to_binary("../img/100.png"), 3, 3)
+    img = Image.open("/home/mateusz/Pictures/Wallpapers/serpentines.jpg")
+
+    print(create_ascii_art(img, 40, 40))

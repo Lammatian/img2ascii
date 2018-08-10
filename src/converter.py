@@ -2,6 +2,8 @@ from PIL import Image
 import numpy as np
 from scipy import spatial
 
+ascii_images = {}
+
 """
 Convert an image to binary format and appropriate size for comparison
 """
@@ -95,9 +97,9 @@ def find_best_match(image, measure="cos"):
     best_char = " "
 
     for i in range(32, 127):
-        asc_img = Image.open("../img/" + str(i) + ".png")
-        asc = convert_to_binary(asc_img)
-        similarity = similarity_measures[measure](asc, binary_image)
+        #asc_img = Image.open("../img/" + str(i) + ".png")
+        #asc = convert_to_binary(asc_img)
+        similarity = similarity_measures[measure](binary_image, ascii_images[i])
 
         if similarity > best_value:
             best_char = chr(i)
@@ -109,7 +111,7 @@ def find_best_match(image, measure="cos"):
     
     return best_char
 
-def create_ascii_art(image, width, height, measure="cos"):
+def create_ascii_art(image, width, height, measure="cos", savepath=""):
     result = ""
     widthcount = 0
     for part in split_image(image, width, height):
@@ -119,7 +121,19 @@ def create_ascii_art(image, width, height, measure="cos"):
         if widthcount == 0:
             result += "\n"
 
-    print(result)
+    if savepath:
+        with open(savepath, "w") as f:
+            f.write(result)
+    else:
+        print(result)
+
+def generate_binary_ascii_images():
+    global ascii_images
+
+    for i in range(32, 127):
+        img = Image.open("../img/" + str(i) + ".png")
+        ascii_images[i] = convert_to_binary(img)
+
 
 # TODO: For testing
 if __name__ == "__main__":

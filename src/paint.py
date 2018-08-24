@@ -25,12 +25,17 @@ class Paint():
         self.create_toolbar()
 
     def create_toolbar(self):
-        self.toolbar = tk.Frame(self.master, width=WIDTH, height=0.1*HEIGHT, bg="grey")
-#        self.small_marker_button = tk.Button(self.toolbar, width=MARKER_SMALL, height=MARKER_SMALL, bg="black")
-#        self.small_marker_button.grid(row=0, column=0)
-#        self.medium_marker_button = tk.Button(self.toolbar, width=MARKER_SMALL, height=MARKER_SMALL, bg="black")
-#        self.medium_marker_button.pack(side=tk.LEFT)
-        self.toolbar.pack(side=tk.BOTTOM)
+        self.toolbar = tk.Frame(self.master, bg="grey")
+        self.toolbar.pack(fill=tk.BOTH, expand=True)
+        self.draw_button_small = tk.PhotoImage(file="../img/draw_button_small.png")
+        self.small_marker_button = tk.Button(self.toolbar, image=self.draw_button_small)
+        self.small_marker_button["border"] = 0
+        self.small_marker_button["bg"] = "grey"
+        self.small_marker_button["borderwidth"] = 0
+        self.small_marker_button["highlightthickness"] = 0
+        self.small_marker_button.pack(side=tk.LEFT, padx=5, pady=5)
+        self.medium_marker_button = tk.Button(self.toolbar, width=MARKER_SMALL, height=MARKER_SMALL, bg="black")
+        self.medium_marker_button.pack(side=tk.LEFT, padx=5, pady=5)
 
     def toggle_draw(self, event):
         self.is_drawing = not self.is_drawing

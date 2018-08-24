@@ -21,7 +21,7 @@ def main():
             converter.generate_binary_ascii_images()
 
             savepath = args.savepath or ""
-            measure = args.measure or "cos"
+            measure = args.measure or "binary"
 
             converter.create_ascii_art(Image.open(args.file), args.width, args.height, measure, savepath)
             return

@@ -1,6 +1,7 @@
-import tkinter as tk
-from paint import Paint
+from paint import Window
 import converter
+import sys
+from PyQt5.QtWidgets import QApplication
 import argparse
 from PIL import Image
 
@@ -26,10 +27,9 @@ def main():
             converter.create_ascii_art(Image.open(args.file), args.width, args.height, measure, savepath)
             return
     else:
-        root = tk.Tk()
-
-        app = Paint(root)
-        root.mainloop()
+        app = QApplication(sys.argv)
+        window = Window()
+        sys.exit(app.exec_())
 
 if __name__ == "__main__":
     main()

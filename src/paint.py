@@ -1,56 +1,83 @@
-import tkinter as tk
+import sys
+from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QFont, QPen
+from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine
 
-WIDTH = 1000
-HEIGHT = 600
+SMALL_BRUSH = 2
+MEDIUM_BRUSH = 6
+BIG_BRUSH = 10
+BRUSHES = [SMALL_BRUSH, MEDIUM_BRUSH, BIG_BRUSH]
 
-MARKER_SMALL = 2
-MARKER_MEDIUM = 6
-MARKER_BIG = 10
+class Paint(QWidget):
+    newPoint = pyqtSignal(QPoint)
 
-class Paint():
-    def __init__(self, master):
-        self.master = master
-        self.canvas = tk.Canvas(master, width=WIDTH, height=HEIGHT)
-        self.canvas.pack()
-        self.last_x = None
-        self.last_y = None
-        self.is_drawing = False
+    def __init__(self, parent=None):
+        super().__init__()
+        # small, medium, big
+        self.paths = []
+        self.brush_size = MEDIUM_BRUSH
+        self.current_brush = 1
 
-        self.marker_size = MARKER_MEDIUM
+    def set_brush(self, brush_size):
+        if brush_size != self.brush_size:
+            self.current_brush = BRUSHES.index(brush_size)
+            self.brush_size = brush_size
 
-        #self.canvas.bind("<B1-Motion>", self.start_drawing)
-        self.canvas.bind("<ButtonPress-1>", self.toggle_draw)
-        self.canvas.bind("<ButtonRelease-1>", self.toggle_draw)
-        self.canvas.bind("<Motion>", self.draw)
-        self.create_toolbar()
+    def paintEvent(self, event):
+        #self.lines.append(QLine(self.last_point, self.new_point))
+        qp = QPainter(self)
 
-    def create_toolbar(self):
-        self.toolbar = tk.Frame(self.master, bg="grey")
-        self.toolbar.pack(fill=tk.BOTH, expand=True)
-        self.draw_button_small = tk.PhotoImage(file="../img/draw_button_small.png")
-        self.small_marker_button = tk.Button(self.toolbar, image=self.draw_button_small)
-        self.small_marker_button["border"] = 0
-        self.small_marker_button["bg"] = "grey"
-        self.small_marker_button["borderwidth"] = 0
-        self.small_marker_button["highlightthickness"] = 0
-        self.small_marker_button.pack(side=tk.LEFT, padx=5, pady=5)
-        self.medium_marker_button = tk.Button(self.toolbar, width=MARKER_SMALL, height=MARKER_SMALL, bg="black")
-        self.medium_marker_button.pack(side=tk.LEFT, padx=5, pady=5)
+        for path, size in self.paths:
+            pen = QPen()
+            pen.setWidth(size)
+            pen.setColor(QColor(size*20, size*20, size*20))
+            qp.setPen(pen)
 
-    def toggle_draw(self, event):
-        self.is_drawing = not self.is_drawing
+            qp.drawPath(path)
 
-    def draw(self, event):
-        if self.is_drawing and self.last_x and self.last_y:
-            self.canvas.create_line(self.last_x, 
-                                    self.last_y, 
-                                    event.x, 
-                                    event.y, 
-                                    width=self.marker_size,
-                                    capstyle=tk.ROUND,
-                                    smooth=True,
-                                    splinesteps=36)
+    def mousePressEvent(self, event):
+        # Update only the path that is currently chosen
+        self.paths.append((QPainterPath(), self.brush_size))
+        self.paths[-1][0].moveTo(event.pos())
+        self.update()
 
-        self.last_x = event.x
-        self.last_y = event.y
+    def mouseMoveEvent(self, event):
+        # Update only the path that is currently chosen
+        self.paths[-1][0].lineTo(event.pos())
+        self.newPoint.emit(event.pos())
+        self.update()
 
+    def sizeHint(self):
+        return QSize(1000, 600)
+
+class Window(QMainWindow):
+    def __init__(self):
+        super(Window, self).__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.paint = Paint(self)
+        self.setCentralWidget(self.paint)
+        self.setWindowTitle("Paint window")
+        self.toolbar = self.addToolBar("Tools")
+
+        smallBrushAction = QAction("&Small brush", self)
+        smallBrushAction.setShortcut("1")
+        smallBrushAction.triggered.connect(lambda: self.paint.set_brush(SMALL_BRUSH))
+        mediumBrushAction = QAction("&Medium brush", self)
+        mediumBrushAction.setShortcut("2")
+        mediumBrushAction.triggered.connect(lambda: self.paint.set_brush(MEDIUM_BRUSH))
+        bigBrushAction = QAction("&Big brush", self)
+        bigBrushAction.setShortcut("3")
+        bigBrushAction.triggered.connect(lambda: self.paint.set_brush(BIG_BRUSH))
+
+        self.toolbar.addAction(smallBrushAction)
+        self.toolbar.addAction(mediumBrushAction)
+        self.toolbar.addAction(bigBrushAction)
+
+        self.show()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = Window()
+    sys.exit(app.exec_())

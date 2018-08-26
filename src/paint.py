@@ -1,7 +1,7 @@
 import sys
 import io
 from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction, QMessageBox
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QFont, QPen, QIcon, QPalette, QScreen
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QIcon, QPalette
 from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine, QBuffer
 from button_action import PushButtonAction, BrushButtonAction
 from PIL import Image

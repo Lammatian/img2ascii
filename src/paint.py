@@ -67,6 +67,7 @@ class Window(QMainWindow):
         self.setCentralWidget(self.paint)
         self.setWindowTitle("Paint window")
         self.toolbar = self.addToolBar("Tools")
+        self.addToolBar(Qt.BottomToolBarArea, self.toolbar)
 
         self.smallBrushAction = BrushButtonAction(QIcon("../img/draw_button_small.png"), "&Small brush", SMALL_BRUSH, self)
         self.smallBrushAction.setShortcut("1")
@@ -75,6 +76,7 @@ class Window(QMainWindow):
         self.mediumBrushAction = BrushButtonAction(QIcon("../img/draw_button_medium.png"), "&Medium brush", MEDIUM_BRUSH, self)
         self.mediumBrushAction.setShortcut("2")
         self.mediumBrushAction.setCheckable(True)
+        self.mediumBrushAction.setChecked(True)
         self.mediumBrushAction.triggered.connect(lambda: self.change_brush(self.mediumBrushAction))
         self.bigBrushAction = BrushButtonAction(QIcon("../img/draw_button_big.png"), "&Big brush", BIG_BRUSH, self)
         self.bigBrushAction.setShortcut("3")

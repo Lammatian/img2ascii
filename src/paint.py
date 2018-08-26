@@ -1,24 +1,14 @@
 import sys
+import io
 from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction, QMessageBox
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QFont, QPen, QIcon, QPalette
-from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QFont, QPen, QIcon, QPalette, QScreen
+from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine, QBuffer
+from button_action import PushButtonAction, BrushButtonAction
+from PIL import Image
 
 SMALL_BRUSH = 2
 MEDIUM_BRUSH = 8
 BIG_BRUSH = 14
-BRUSHES = [SMALL_BRUSH, MEDIUM_BRUSH, BIG_BRUSH]
-
-class PushButtonAction(QWidgetAction):
-    def __init__(self, icon, text, parent=None):
-        super(PushButtonAction, self).__init__(parent)
-        self.setIcon(icon)
-        self.setObjectName(text)
-        self.setCheckable(True)
-
-class BrushButtonAction(PushButtonAction):
-    def __init__(self, icon, text, brush, parent=None):
-        super(BrushButtonAction, self).__init__(icon, text, parent)
-        self.brush_size = brush
 
 class Paint(QWidget):
     newPoint = pyqtSignal(QPoint)
@@ -32,11 +22,9 @@ class Paint(QWidget):
         self.setPalette(self.palette)
         self.brush_size = MEDIUM_BRUSH
         self.is_erasing = False
-        self.current_brush = 1
 
     def set_brush(self, brush_size):
         if brush_size != self.brush_size:
-            self.current_brush = BRUSHES.index(brush_size)
             self.brush_size = brush_size
 
     def undo(self):
@@ -72,6 +60,20 @@ class Paint(QWidget):
 
     def sizeHint(self):
         return QSize(1000, 600)
+
+    def get_screen(self):
+        return QApplication.primaryScreen().grabWindow(self.windId())
+
+    def to_PIL_Image(self):
+        img = self.get_screen().toImage()
+        buffer = QBuffer()
+        buffer.open(QBuffer.ReadWrite)
+        img.save(buffer, "png")
+        return Image.open(io.BytesIO(buffer.data()))
+
+    def save_image(self):
+        self.get_screen().save("test", "png")
+
 
 class Window(QMainWindow):
     def __init__(self):
@@ -121,11 +123,16 @@ class Window(QMainWindow):
         self.undoAction.setShortcut("Ctrl+Z")
         self.undoAction.triggered.connect(self.paint.undo)
 
+        self.saveImageAction = QAction("Save", self)
+        self.saveImageAction.setShortcut("Ctrl+S")
+        self.saveImageAction.triggered.connect(self.paint.save_image)
+
         self.toolbar.addAction(self.smallBrushAction)
         self.toolbar.addAction(self.mediumBrushAction)
         self.toolbar.addAction(self.bigBrushAction)
         self.toolbar.addAction(self.eraseBrushAction)
         self.toolbar.addAction(self.undoAction)
+        self.toolbar.addAction(self.saveImageAction)
 
         self.show()
 
@@ -147,8 +154,3 @@ class Window(QMainWindow):
     def closeEvent(self, event):
         event.ignore()
         self.close_application()
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = Window()
-    sys.exit(app.exec_())

@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction
+from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction, QMessageBox
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QFont, QPen, QIcon, QPalette
 from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine
 
@@ -79,12 +79,29 @@ class Window(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        # Paint
         self.paint = Paint(self)
+
+        # Window
         self.setCentralWidget(self.paint)
         self.setWindowTitle("Paint window")
+
+        # Menu bar
+        mainMenu = self.menuBar()
+        fileMenu = mainMenu.addMenu("&File")
+
+        # File menu actions
+        quitAction = QAction("&Quit", self)
+        quitAction.setShortcut("Ctrl+Q")
+        quitAction.triggered.connect(self.close_application)
+
+        fileMenu.addAction(quitAction)
+
+        # Toolbar
         self.toolbar = self.addToolBar("Tools")
         self.addToolBar(Qt.BottomToolBarArea, self.toolbar)
 
+        # Toolbar buttons
         self.smallBrushAction = BrushButtonAction(QIcon("../img/draw_button_small.png"), "&Small brush", SMALL_BRUSH, self)
         self.smallBrushAction.setShortcut("1")
         self.smallBrushAction.triggered.connect(lambda: self.change_brush(self.smallBrushAction))
@@ -123,6 +140,13 @@ class Window(QMainWindow):
         # We clicked the one already checked
         else:
             brush.setChecked(True)
+
+    def close_application(self):
+        sys.exit()
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.close_application()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

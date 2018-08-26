@@ -1,12 +1,19 @@
 import sys
-from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow
-from PyQt5.QtGui import QPainter, QPainterPath, QColor, QFont, QPen
+from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction
+from PyQt5.QtGui import QPainter, QPainterPath, QColor, QFont, QPen, QIcon
 from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine
 
 SMALL_BRUSH = 2
 MEDIUM_BRUSH = 6
 BIG_BRUSH = 10
 BRUSHES = [SMALL_BRUSH, MEDIUM_BRUSH, BIG_BRUSH]
+
+class BrushButtonAction(QWidgetAction):
+    def __init__(self, icon, text, brush, parent=None):
+        super(BrushButtonAction, self).__init__(parent)
+        self.setIcon(icon)
+        self.setObjectName(text)
+        self.brush_size = brush
 
 class Paint(QWidget):
     newPoint = pyqtSignal(QPoint)
@@ -61,21 +68,36 @@ class Window(QMainWindow):
         self.setWindowTitle("Paint window")
         self.toolbar = self.addToolBar("Tools")
 
-        smallBrushAction = QAction("&Small brush", self)
-        smallBrushAction.setShortcut("1")
-        smallBrushAction.triggered.connect(lambda: self.paint.set_brush(SMALL_BRUSH))
-        mediumBrushAction = QAction("&Medium brush", self)
-        mediumBrushAction.setShortcut("2")
-        mediumBrushAction.triggered.connect(lambda: self.paint.set_brush(MEDIUM_BRUSH))
-        bigBrushAction = QAction("&Big brush", self)
-        bigBrushAction.setShortcut("3")
-        bigBrushAction.triggered.connect(lambda: self.paint.set_brush(BIG_BRUSH))
+        self.smallBrushAction = BrushButtonAction(QIcon("../img/draw_button_small.png"), "&Small brush", SMALL_BRUSH, self)
+        self.smallBrushAction.setShortcut("1")
+        self.smallBrushAction.setCheckable(True)
+        self.smallBrushAction.triggered.connect(lambda: self.change_brush(self.smallBrushAction))
+        self.mediumBrushAction = BrushButtonAction(QIcon("../img/draw_button_medium.png"), "&Medium brush", MEDIUM_BRUSH, self)
+        self.mediumBrushAction.setShortcut("2")
+        self.mediumBrushAction.setCheckable(True)
+        self.mediumBrushAction.triggered.connect(lambda: self.change_brush(self.mediumBrushAction))
+        self.bigBrushAction = BrushButtonAction(QIcon("../img/draw_button_big.png"), "&Big brush", BIG_BRUSH, self)
+        self.bigBrushAction.setShortcut("3")
+        self.bigBrushAction.setCheckable(True)
+        self.bigBrushAction.triggered.connect(lambda: self.change_brush(self.bigBrushAction))
 
-        self.toolbar.addAction(smallBrushAction)
-        self.toolbar.addAction(mediumBrushAction)
-        self.toolbar.addAction(bigBrushAction)
+        self.toolbar.addAction(self.smallBrushAction)
+        self.toolbar.addAction(self.mediumBrushAction)
+        self.toolbar.addAction(self.bigBrushAction)
 
         self.show()
+
+    def change_brush(self, brush):
+        # We just checked this brush
+        if brush.isChecked():
+            self.smallBrushAction.setChecked(False)
+            self.mediumBrushAction.setChecked(False)
+            self.bigBrushAction.setChecked(False)
+            brush.setChecked(True)
+            self.paint.set_brush(brush.brush_size)
+        # We clicked the one already checked
+        else:
+            brush.setChecked(True)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

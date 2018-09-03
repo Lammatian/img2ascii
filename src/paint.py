@@ -1,6 +1,6 @@
 import sys
 import io
-from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction, QMessageBox
+from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction, QMessageBox, QFileDialog
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QIcon, QPalette
 from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine, QBuffer
 from button_action import PushButtonAction, BrushButtonAction
@@ -62,7 +62,8 @@ class Paint(QWidget):
         return QSize(1000, 600)
 
     def get_screen(self):
-        return QApplication.primaryScreen().grabWindow(self.windId())
+        return self.grab()
+        #return QApplication.primaryScreen().grabWindow(self.winId())
 
     def to_PIL_Image(self):
         img = self.get_screen().toImage()
@@ -72,7 +73,16 @@ class Paint(QWidget):
         return Image.open(io.BytesIO(buffer.data()))
 
     def save_image(self):
-        self.get_screen().save("test", "png")
+        # TODO: Get current path
+        file_dialog = QFileDialog()
+        file_dialog.setWindowTitle("Save image")
+        file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+        file_dialog.setNameFilter("Image file (*.png)")
+        file_dialog.setDefaultSuffix("png")
+
+        if file_dialog.exec_() == QFileDialog.Accepted:
+            filename = file_dialog.selectedFiles()[0]
+            self.get_screen().save(filename, "png")
 
 
 class Window(QMainWindow):

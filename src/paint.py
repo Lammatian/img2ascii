@@ -1,6 +1,6 @@
 import sys
 import io
-from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QAction, QWidget, QApplication, QMainWindow, QToolButton, QWidgetAction, QMessageBox, QFileDialog, QSizePolicy
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QPen, QIcon, QPalette
 from PyQt5.QtCore import Qt, QPoint, QSize, pyqtSignal, QLine, QBuffer
 from button_action import PushButtonAction, BrushButtonAction
@@ -63,7 +63,6 @@ class Paint(QWidget):
 
     def get_screen(self):
         return self.grab()
-        #return QApplication.primaryScreen().grabWindow(self.winId())
 
     def to_PIL_Image(self):
         img = self.get_screen().toImage()
@@ -73,7 +72,6 @@ class Paint(QWidget):
         return Image.open(io.BytesIO(buffer.data()))
 
     def save_image(self):
-        # TODO: Get current path
         file_dialog = QFileDialog()
         file_dialog.setWindowTitle("Save image")
         file_dialog.setAcceptMode(QFileDialog.AcceptSave)
@@ -137,12 +135,25 @@ class Window(QMainWindow):
         self.saveImageAction.setShortcut("Ctrl+S")
         self.saveImageAction.triggered.connect(self.paint.save_image)
 
+        self.spacer = QWidget(self)
+        self.spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.generateAsciiAction = QAction("Generate", self)
+        # TODO: Update shortcut later
+        self.generateAsciiAction.setShortcut("G")
+        self.generateAsciiAction.triggered.connect(lambda: self.paint.to_PIL_Image().show())
+
+        # All actions on the left/top
         self.toolbar.addAction(self.smallBrushAction)
         self.toolbar.addAction(self.mediumBrushAction)
         self.toolbar.addAction(self.bigBrushAction)
         self.toolbar.addAction(self.eraseBrushAction)
         self.toolbar.addAction(self.undoAction)
         self.toolbar.addAction(self.saveImageAction)
+        # Spacer
+        self.toolbar.addWidget(self.spacer)
+        # All actions on the right/bottom
+        self.toolbar.addAction(self.generateAsciiAction)
 
         self.show()
 
